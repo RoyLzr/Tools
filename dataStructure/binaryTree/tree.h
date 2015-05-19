@@ -22,8 +22,10 @@ class TreeNode
         int count;
         int height; 
         TreeNode() : parent(NULL), leftChild(NULL), 
-                     rightChild(NULL), count(0), height(-1){}
-        TreeNode(int value) : data(value), count(1) {}
+                     rightChild(NULL), count(0), height(0){}
+        TreeNode(int value) : parent(NULL), leftChild(NULL), 
+                              data(value), count(1), rightChild(NULL), 
+                              height(0){}
 };
 
 typedef pair<TreeNode *, int> TYPE;
@@ -53,18 +55,23 @@ class Btree
         void middle_travel(TreeNode *);
         void printNode(TreeNode *); 
         void printLevel(vector<TYPE>);
- 
-        int Height(TreeNode * node)
-        {
-            if(node == NULL)
-                return -1;
-            else
-                return node->height; 
-        }        
+        TreeNode * clean(TreeNode *);
+         
  
         Btree() : root(NULL) {}
 
 };
+
+TreeNode * Btree :: clean(TreeNode * node)
+{
+    if(node != NULL)
+    {
+        clean(node->leftChild);
+        clean(node->rightChild);
+        delete node;
+    }
+    return NULL; 
+}
 
 void Btree :: printNode(TreeNode * node)
 {
@@ -165,6 +172,7 @@ class SearchTree : public Btree
         if(*ptrNode == NULL)
         {
             *ptrNode = new TreeNode(value);
+
             if(*ptrNode == NULL)
                 return false;
         }
@@ -183,12 +191,12 @@ class SearchTree : public Btree
         if(*ptrNode == NULL)
         {
             *ptrNode = new TreeNode(value);
+            
             if(*ptrNode == NULL)
                 return false;
-            if(parent != NULL)
-            {
-                (*ptrNode)->parent = parent;
-            }
+
+            (*ptrNode)->parent = parent;
+
         }
         else if(value < node->data)
             tree_insert(value, &(node->leftChild), node); 
