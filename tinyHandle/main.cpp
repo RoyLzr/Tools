@@ -39,12 +39,13 @@ int main()
     Handle<Base> test1 = item_test1;
     
     test2->out();
+    //×ªÒâ test1->ptr->out()
     test1->out();
   
     Handle<Base> test3 = test1;
     Handle<Base> test4;
     test4 = test1;
-
+    
     //test explicit
     Base base1(1);
 
