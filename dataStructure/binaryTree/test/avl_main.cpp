@@ -1,4 +1,4 @@
-#include "avltree.h"
+#include "../avltree.h"
 
 using namespace std;
 
