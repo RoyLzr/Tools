@@ -267,6 +267,8 @@ class SearchTree : public Btree
                 if(node->rightChild != NULL)
                     *ptrNode = node->rightChild;
                 free(node);
+                if(node->leftChild == NULL && node->rightChild == NULL)
+                    *ptrNode = NULL;
             }
             else
             {
