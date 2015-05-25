@@ -96,9 +96,4 @@ bool AvlTree :: tree_insert(int value, TreeNode ** ptrNode)
     return true; 
 }
 
-
-
-
-
-
 #endif

@@ -111,8 +111,9 @@ int main()
     cout << endl << kthInStree(sTree1.root, &tmp)->data << endl;
     tmp = 2;
     cout << endl << kthInStree(sTree1.root, &tmp)->data << endl;
-    tmp = 3;
+    tmp = 5;
     cout << endl << kthInStree(sTree1.root, &tmp)->data << endl;
-    
+   
+     
     return 0;
 }

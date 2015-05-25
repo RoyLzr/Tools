@@ -168,6 +168,7 @@ void FindPath(TreeNode * root, int value)
     vector<int> path;
     FindPath(root, value, sum, path);
 }
+
 void FindPath(TreeNode * root, int value, int sum, vector<int> &path)
 {
     if(root == NULL)
@@ -209,7 +210,6 @@ bool DetectIsAVLTree(TreeNode * root, int *height)
         *height = 0;
         return true;
     }
-
     int leftHeight;
     int rightHeight; 
     if(!DetectIsAVLTree(root->leftChild, &leftHeight))
@@ -241,6 +241,7 @@ TreeNode * convertTreeToList(TreeNode * root)
     return tmp; 
 }
 
+//mid travel, consider refresh global pre
 void convertTreeToListCore(TreeNode * root, TreeNode ** pre)
 {
     if(root->leftChild != NULL)

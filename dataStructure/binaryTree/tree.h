@@ -93,7 +93,6 @@ void Btree :: printLevel(vector<TYPE> res)
             cout << endl << endl;
             level = tmp.second;
         }
-
         if(tmp.first != NULL)
         {
             cout << tmp.first->data << " ";
