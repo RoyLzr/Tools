@@ -33,9 +33,16 @@ RbNode * singleRoLeft(RbNode * node)
 {
     if(node == NULL)
         return NULL;
+    
     RbNode * mid = node->left;
     node->left = mid->right;
     mid->right = node;
+   
+    mid->parent = mid->right->parent;
+    mid->right->parent = mid;
+    mid->left->parent = mid;
+    node->left->parent = node;   
+    
     return mid;
 }
 
@@ -48,6 +55,12 @@ RbNode * singleRoRight(RbNode * node)
     RbNode * mid = node->right;
     node->right = mid->left;
     mid->left = node;
+
+    mid->parent = mid->left->parent;
+    mid->left->parent = mid;
+    mid->right->parent = mid;
+    node->right->parent = node;    
+
     return mid;
 }
 
@@ -82,7 +95,8 @@ class RbTree
             head = new RbNode(NEGTIVE);
             head->color = BLACK;
             head->left = NullNode;
-            head->right = NullNode; 
+            head->right = NullNode;
+            head->parent = NullNode; 
         }
 };
 
@@ -155,7 +169,8 @@ RbTree * RbInsert(int value, RbTree * tree)
     tmp->color = RED; 
     tmp->left = tree->NullNode; 
     tmp->right = tree->NullNode;
- 
+    tmp->parent = parent;
+     
     if(value < parent->data)
         parent->left = tmp;
     else
@@ -165,6 +180,7 @@ RbTree * RbInsert(int value, RbTree * tree)
     
     return tree;     
 }
+
 
 
 void printLevel(vector<TYPE> res)
@@ -183,7 +199,7 @@ void printLevel(vector<TYPE> res)
         }
         if(tmp.first != NULL)
         {
-            cout << tmp.first->data << "("<<tmp.first->color<<")"  <<" ";
+            cout << tmp.first->data << "("<<tmp.first->color <<","<<tmp.first->parent->data <<")"<<" ";
         }
         else
         {
@@ -230,5 +246,179 @@ void middleTravel(RbNode * node, RbNode * NullNode)
     middleTravel(node->right, NullNode);
 }
 
+RbNode * find(int key, RbNode * node, RbNode * NullNode)
+{
+    if(node == NullNode)
+        return NULL;
+    RbNode * res = node;
+
+    if(key < node->data)
+        res = find(key, node->left, NullNode);
+    else if(key > node->data)
+        res = find(key, node->right, NullNode);
+    
+    return res;
+}
+
+RbNode * findMin(RbNode * node, RbNode * NullNode)
+{
+    if(node == NullNode)
+        return NULL;
+    while(node->left != NullNode)
+        node = node->left;
+    
+    return node; 
+}
+
+void DeleteFix(RbNode * node, RbTree * tree)
+{
+    RbNode * root = tree->head->right;
+    while(node != root && node->color != RED)
+    {
+        RbNode ** tmp;
+        RbNode * tmpParent;
+        if(node == node->parent->left)
+        {
+            cout << "===========step in left==========" << endl;
+            RbNode * brother = node->parent->right;
+            if(brother->color == RED)
+            {
+                tmpParent = node->parent->parent;
+                if(tmpParent->left == node->parent)
+                    tmp = &(tmpParent->left);
+                else
+                    tmp = &(tmpParent->right);
+                 
+                node->parent->color = RED;
+                brother->color = BLACK; 
+                (*tmp) = singleRoRight(node->parent);
+                (*tmp)->parent = tmpParent;
+            }
+            else
+            {
+                if(brother->left->color == BLACK && brother->right->color == BLACK)
+                {
+                    brother->color = RED;
+                    node = node->parent;
+                }
+                else if(brother->left->color == RED && brother->right->color == BLACK)
+                {
+                    brother->left->color = BLACK;
+                    brother->color = RED;
+                    node->parent->right = singleRoLeft(brother);
+                }
+                else if(brother->right->color == RED)
+                {
+                    tmpParent = node->parent->parent;
+                    if(tmpParent->left == node->parent)
+                        tmp = &(tmpParent->left);
+                    else
+                        tmp = &(tmpParent->right); 
+                    
+                    node->parent->color = BLACK;
+                    brother->color = node->parent->color;
+                    brother->right->color = BLACK;
+                    
+                    (*tmp) = singleRoRight(node->parent);
+                    (*tmp)->parent = tmpParent;
+                   
+                     node = root; 
+                }
+            }
+        }
+        else
+        {
+            RbNode * brother = node->parent->left;
+            if(brother->color == RED)
+            {
+                tmpParent = node->parent->parent;
+                if(tmpParent->left == node->parent)
+                    tmp = &(tmpParent->left);
+                else
+                    tmp = &(tmpParent->right);
+ 
+                node->parent->color = RED;
+                brother->color = BLACK; 
+                (*tmp) = singleRoLeft(node->parent); 
+                (*tmp)->parent = tmpParent;
+            }
+            else
+            {
+                if(brother->left->color == BLACK && brother->right->color == BLACK)
+                {
+                    brother->color = RED;
+                    node = node->parent;
+                }
+                else if(brother->right->color == RED && brother->left->color == BLACK)
+                {
+                    brother->right->color = BLACK;
+                    brother->color = RED;
+                    node->parent->left = singleRoLeft(brother);
+                }
+                else if(brother->left->color == RED)
+                {
+                    tmpParent = node->parent->parent;
+                    if(tmpParent->left == node->parent)
+                        tmp = &(tmpParent->left);
+                    else
+                        tmp = &(tmpParent->right); 
+                    
+                    node->parent->color = BLACK;
+                    brother->color = node->parent->color;
+                    brother->left->color = BLACK;
+
+                    (*tmp) = singleRoLeft(node->parent);
+                    (*tmp)->parent = tmpParent;
+                    
+                    node = root; 
+                }
+            }
+        }
+    }
+    root->color = BLACK; 
+}
+
+RbTree * RbDelete(int key, RbTree * tree)
+{
+    RbNode * de_point = find(key, tree->head, tree->NullNode);
+    RbNode * NullNode = tree->NullNode;
+    RbNode * head = tree->head;
+
+    if(de_point == NULL)
+        return NULL;
+
+    if(de_point->left != NullNode && de_point->right != NullNode)
+    {
+        RbNode * nexter = findMin(de_point->right, NullNode);
+        de_point->data = nexter->data;
+        de_point = nexter;
+    }
+    RbNode * de_child;
+    if(de_point->left != NullNode)
+    {
+        de_child = de_point->left;
+    }
+    else if(de_point->right != NullNode)
+    {
+        de_child = de_point->right;
+    }
+    else
+        de_child = NullNode;
+    
+    de_child->parent = de_point->parent; 
+    if(de_child->parent == head)
+        head->right = de_child;
+    else if(de_point->parent->left == de_point)
+        de_point->parent->left = de_child;
+    else
+        de_point->parent->right = de_child;
+    
+    if(de_point->color != RED && de_child != NullNode)
+    {
+        DeleteFix(de_child, tree);
+    }
+    delete de_point;
+    return tree;     
+} 
 
 #endif
