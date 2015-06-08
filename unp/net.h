@@ -1,0 +1,66 @@
+//**********************************************************
+//          Net Utility 1.0
+//
+//  Description:
+//  ÍøÂç »ù±¾ ²Ù×÷
+//
+// Author: Liu ZhaoRui
+//         liuzhaorui1@163.com
+//**********************************************************
+
+#ifndef __NET_H__
+#define __NET_H__
+
+#include <stdio.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <endian.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <iostream>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <sys/epoll.h>
+#include <signal.h>
+
+typedef struct _rio_t
+{
+    int rio_fd;
+    int rio_cnt;
+    size_t rio_len;
+    char * rio_bufptr;
+    char * rio_ptr;
+} rio_t;
+
+void  
+rio_init(rio_t *rp, int fd, int len);
+
+//static ssize_t 
+//rio_read(rio_t *rp, char *usrbuf, size_t n);
+
+ssize_t 
+rio_readn(rio_t *rp, void *usrbuf, size_t n);
+
+ssize_t
+rio_readline(rio_t *rp, void *usrbuf, size_t maxlen);
+
+
+ssize_t
+sendn(int fd, void *usrbuf, size_t n);
+
+
+
+
+
+#endif
