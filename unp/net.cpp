@@ -98,16 +98,18 @@ sendn(int fd, void *usrbuf, size_t n)
     while(nleft > 0)
     {
         nwrite = write(fd, buf, nleft);
-        if(nwrite <= 0)
+        if(nwrite < 0)
         {
             if(errno != EINTR)
                 return -1;
             nwrite = 0;
         }
+        else if(nwrite == 0)
+            break;
         buf += nwrite;
         nleft -= nwrite;
     }
-    return n;
+    return n - nleft;
 }
 
 

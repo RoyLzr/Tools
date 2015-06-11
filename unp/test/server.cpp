@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     bind(listenfd, (sockaddr *) &server_address, sizeof(server_address));
     listen(listenfd, 10);
     
-    //sleep(5);
+    sleep(5);
     int confd = accept(listenfd, NULL, 0);
     
     //rio_init(&rio, confd, 5);
@@ -54,17 +54,23 @@ int main(int argc, char *argv[])
     //printf("%s\n", strerror(errno));
     //printf("%d\n", errno);
 
-    char tmp[] = "haha\n";
+    char tmp[] = "hahahahahahahahahhahahahahhahahahahahahahahahahahahahahahahahahahahha\n";
     int i = 0;
+    
     while(true)
     {
         n = write(confd, tmp, sizeof(tmp));
+        if(n < 0)
+            printf("%s", strerror(errno));
         printf("write =  %d %d %d\n", n, sizeof(tmp), i++);
     }
+    
     //close(confd);
+    n = sendn(confd, tmp, sizeof(tmp));
+    printf("write =  %d %d\n", n, sizeof(tmp));
     printf("step over\n");
-    //n = sendn(confd, tmp, sizeof(tmp));
-    //printf("write =  %d %d\n", n, sizeof(tmp));
+    n = sendn(confd, tmp, sizeof(tmp));
+    printf("write =  %d %d\n", n, sizeof(tmp));
 
     //sendn(confd, tmp, sizeof(tmp));
 }

@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
         sleep(1);
     }
     */
-    
+    sleep(20);
+    close(fd); 
     sleep(1000);
 }
