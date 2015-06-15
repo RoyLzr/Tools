@@ -6,6 +6,8 @@ void rio_init(rio_t *rp, int fd, int len)
     rp->rio_cnt = 0;
     rp->rio_len = len;
     rp->rio_bufptr = rp->rio_ptr;
+    rp->cache = NULL;
+    rp->cache_len = 0;
 }
 
 static ssize_t
@@ -49,6 +51,8 @@ rio_readn(rio_t *rp, void *usrbuf, size_t n)
             break;
         else if(nread < 0)
         {
+            if(errno == EAGAIN)
+                break;
             if(errno != EINTR)
                 return -1;
             nread = 0;
@@ -60,11 +64,13 @@ rio_readn(rio_t *rp, void *usrbuf, size_t n)
 }
 
 ssize_t
-rio_readline(rio_t *rp, void *usrbuf, size_t maxlen)
+rio_readline(rio_t *rp, void *usrbuf, size_t maxlen, int * st)
 {
     char c, *buf = (char *)usrbuf;
     int i;
     int nread;
+    *st = 1;
+
     for(i = 1; i < maxlen; i++)
     {
         nread = rio_read(rp, &c, 1);
@@ -76,7 +82,15 @@ rio_readline(rio_t *rp, void *usrbuf, size_t maxlen)
                 break;
         }
         else if(nread < 0)
-            return -1;
+        {
+            if(errno == EAGAIN)
+            { 
+                *st = -1;   
+                break;
+            }
+            else
+                return -1;
+        }
         else
         {
             *buf = c;
@@ -85,7 +99,7 @@ rio_readline(rio_t *rp, void *usrbuf, size_t maxlen)
                 break;
         }     
     }
-    *buf = 0;
+    *buf = '\0';
     return i;
 }
 
@@ -113,4 +127,32 @@ sendn(int fd, void *usrbuf, size_t n)
 }
 
 
+int 
+set_fd(int fd, int flags, int closed)
+{
+    int val;
+    if ( (val = fcntl(fd, F_GETFL, 0)) < 0)
+    {
+        std::cout << "fd get error" << std::endl;
+        if(closed == 0)
+        {
+            close(fd);
+        }
+        return -1;
+    }
+    val |= flags;
+    if ( (fcntl(fd, F_SETFL, val)) < 0)
+    {
+        std::cout << "fd get error" << std::endl;
+        if(closed == 0)
+            close(fd);
+        return -1;
+    }
+    return 0;
+}
 
+int 
+set_fd_noblock(int fd)
+{
+   return set_fd(fd, O_NONBLOCK, 1);
+}

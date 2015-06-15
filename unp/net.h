@@ -41,25 +41,31 @@ typedef struct _rio_t
     size_t rio_len;
     char * rio_bufptr;
     char * rio_ptr;
+
+    char * cache;
+    int cache_len;
 } rio_t;
 
 void  
 rio_init(rio_t *rp, int fd, int len);
 
-//static ssize_t 
-//rio_read(rio_t *rp, char *usrbuf, size_t n);
-
 ssize_t 
 rio_readn(rio_t *rp, void *usrbuf, size_t n);
 
 ssize_t
-rio_readline(rio_t *rp, void *usrbuf, size_t maxlen);
+rio_readline(rio_t *rp, void *usrbuf, size_t maxlen, int * st = NULL);
 
 
 ssize_t
 sendn(int fd, void *usrbuf, size_t n);
 
 
+int 
+set_fd(int fd, int flags, int closed);
+
+
+int 
+set_fd_noblock(int fd);
 
 
 
