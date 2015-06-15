@@ -59,7 +59,13 @@ int test_block_cache(struct sockaddr_in server_address)
             int idx = 1;
             if(fd == rio[0].rio_fd)
                 idx = 0;
-            int n = rio_readline(&rio[idx], res, sizeof(res));
+            //int n = rio_readline(&rio[idx], res, sizeof(res));
+            int n = rio_readline_to_ms(&rio[idx], res, sizeof(res), 200);
+            if(n < 0)
+            {
+                cout << strerror(errno) << endl;
+                return 0;
+            }
             if(n == 0)
                 return 0;
             //cout << "fd: " << rio[idx].rio_fd << ":"<< rio[idx].rio_cnt<< endl;
@@ -180,6 +186,6 @@ int main(int argc, char *argv[])
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(1025);
     
-    //test_block_cache(server_address);
-    test_noblock_cache(server_address);
+    test_block_cache(server_address);
+    //test_noblock_cache(server_address);
 }

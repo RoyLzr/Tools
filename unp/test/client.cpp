@@ -29,7 +29,7 @@ void test_block_sequenceLine(struct sockaddr_in client_address)
 
     if(n < 0)
         printf("connect error \n");
-    char tmp1[] = "12345\n";
+    char tmp1[] = "12345";
     char tmp2[] = "678\n";
 
       
@@ -132,6 +132,6 @@ int main(int argc, char *argv[])
     client_address.sin_port = htons(1025);
     inet_pton(AF_INET, "127.0.0.1", &client_address.sin_addr);
     
-    //test_block_sequenceLine(client_address);
-    test_block_cutLine(client_address);
+    test_block_sequenceLine(client_address);
+    //test_block_cutLine(client_address);
 }

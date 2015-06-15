@@ -1,0 +1,34 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+__NET_H__	net.h	12;"	d
+_rio_t	net.h	/^typedef struct _rio_t$/;"	s
+cache	net.h	/^    char * cache;$/;"	m	struct:_rio_t
+cache_len	net.h	/^    int cache_len;$/;"	m	struct:_rio_t
+main	test/client.cpp	/^int main(int argc, char *argv[])$/;"	f
+main	test/main.cpp	/^int main()$/;"	f
+main	test/server.cpp	/^int main(int argc, char *argv[])$/;"	f
+max	test/client.cpp	13;"	d	file:
+max	test/server.cpp	13;"	d	file:
+res	test/client.cpp	/^char res[10000];$/;"	v
+res	test/server.cpp	/^char res[10000];$/;"	v
+rio_bufptr	net.h	/^    char * rio_bufptr;$/;"	m	struct:_rio_t
+rio_cnt	net.h	/^    int rio_cnt;$/;"	m	struct:_rio_t
+rio_fd	net.h	/^    int rio_fd;$/;"	m	struct:_rio_t
+rio_init	net.cpp	/^void rio_init(rio_t *rp, int fd, int len)$/;"	f
+rio_len	net.h	/^    size_t rio_len;$/;"	m	struct:_rio_t
+rio_ptr	net.h	/^    char * rio_ptr;$/;"	m	struct:_rio_t
+rio_read	net.cpp	/^rio_read(rio_t *rp, char *usrbuf, size_t n)$/;"	f	file:
+rio_readline	net.cpp	/^rio_readline(rio_t *rp, void *usrbuf, size_t maxlen, int * st)$/;"	f
+rio_readn	net.cpp	/^rio_readn(rio_t *rp, void *usrbuf, size_t n)$/;"	f
+rio_t	net.h	/^} rio_t;$/;"	t	typeref:struct:_rio_t
+sendn	net.cpp	/^sendn(int fd, void *usrbuf, size_t n)$/;"	f
+set_fd	net.cpp	/^set_fd(int fd, int flags, int closed)$/;"	f
+set_fd_noblock	net.cpp	/^set_fd_noblock(int fd)$/;"	f
+test_block_cache	test/server.cpp	/^int test_block_cache(struct sockaddr_in server_address)$/;"	f
+test_block_cutLine	test/client.cpp	/^void test_block_cutLine(struct sockaddr_in client_address)$/;"	f
+test_block_sequenceLine	test/client.cpp	/^void test_block_sequenceLine(struct sockaddr_in client_address)$/;"	f
+test_noblock_cache	test/server.cpp	/^int test_noblock_cache(struct sockaddr_in server_address)$/;"	f

@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <sys/epoll.h>
 #include <signal.h>
+#include <limits.h>
 
 typedef struct _rio_t
 {
@@ -50,22 +51,30 @@ void
 rio_init(rio_t *rp, int fd, int len);
 
 ssize_t 
-rio_readn(rio_t *rp, void *usrbuf, size_t n);
+rio_readn(rio_t *rp, void *usrbuf, size_t n, int * st = NULL);
 
 ssize_t
 rio_readline(rio_t *rp, void *usrbuf, size_t maxlen, int * st = NULL);
 
-
 ssize_t
 sendn(int fd, void *usrbuf, size_t n);
-
 
 int 
 set_fd(int fd, int flags, int closed);
 
-
 int 
 set_fd_noblock(int fd);
+
+ssize_t 
+readn_to_ms(int fd, void *ptr, size_t nbytes, int msecs);
+
+
+ssize_t 
+rio_readn_to_ms(rio_t *rp, void *usrbuf, size_t n, int msecs);
+
+
+ssize_t
+rio_readline_to_ms(rio_t *rp, void *usrbuf, size_t maxlen, int msecs);
 
 
 
