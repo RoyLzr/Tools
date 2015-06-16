@@ -73,12 +73,14 @@ void test_block_cutLine(struct sockaddr_in client_address)
 {
     int fd0 = socket(AF_INET, SOCK_STREAM, 0);
     int n;
-    connect(fd0, (sockaddr *)&client_address, sizeof(client_address));
+    net_connect_to_ms(fd0, (sockaddr *) &client_address, 
+                      sizeof(client_address), 2000);
 
     int fd1 = socket(AF_INET, SOCK_STREAM, 0);
     
-    n = connect(fd1, (sockaddr *)&client_address, sizeof(client_address));
-
+    n = net_connect_to_ms(fd1, (sockaddr *) &client_address, 
+                          sizeof(client_address), 2000);
+   
     if(n < 0)
         printf("connect error \n");
     
@@ -128,10 +130,9 @@ int main(int argc, char *argv[])
 {
     
     struct sockaddr_in client_address;
-    client_address.sin_family = AF_INET;
-    client_address.sin_port = htons(1025);
-    inet_pton(AF_INET, "127.0.0.1", &client_address.sin_addr);
+    char addr[] = "127.0.0.1";
+    set_tcp_sockaddr(addr, 1025, &client_address);
     
-    test_block_sequenceLine(client_address);
-    //test_block_cutLine(client_address);
+    //test_block_sequenceLine(client_address);
+    test_block_cutLine(client_address);
 }

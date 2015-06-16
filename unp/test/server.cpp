@@ -60,7 +60,7 @@ int test_block_cache(struct sockaddr_in server_address)
             if(fd == rio[0].rio_fd)
                 idx = 0;
             //int n = rio_readline(&rio[idx], res, sizeof(res));
-            int n = rio_readline_to_ms(&rio[idx], res, sizeof(res), 200);
+            int n = rio_readline_to_ms(&rio[idx], res, sizeof(res), 15000);
             if(n < 0)
             {
                 cout << strerror(errno) << endl;
@@ -71,7 +71,7 @@ int test_block_cache(struct sockaddr_in server_address)
             //cout << "fd: " << rio[idx].rio_fd << ":"<< rio[idx].rio_cnt<< endl;
             
             cout << n <<" : " << res << endl; 
-            cout << "write :" << sendn(fd, res, n) << endl;
+            cout << "write :" << sendn_to_ms(fd, res, n, 500) << endl;
             
             ev[0].events = events[i].events | EPOLLIN;
             ev[0].data.fd = fd;
@@ -87,9 +87,7 @@ int test_block_cache(struct sockaddr_in server_address)
 int test_noblock_cache(struct sockaddr_in server_address)
 {
     int fd, epfd;
-    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    bind(listenfd, (sockaddr *) &server_address, sizeof(server_address));
-    listen(listenfd, 10);
+    int listenfd = net_tcplisten(1025, 10);
     
     struct epoll_event ev[2], events[1000];
   
@@ -152,7 +150,7 @@ int test_noblock_cache(struct sockaddr_in server_address)
                     break;
                 }
                 cout << n <<" : " << res << endl; 
-                cout << "write :" << sendn(fd, res, n + clen) << endl;
+                cout << "write :" << sendn_to_ms(fd, res, n + clen, 500) << endl;
                 clen = 0;
             }
 
@@ -186,6 +184,6 @@ int main(int argc, char *argv[])
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(1025);
     
-    test_block_cache(server_address);
-    //test_noblock_cache(server_address);
+    //test_block_cache(server_address);
+    test_noblock_cache(server_address);
 }

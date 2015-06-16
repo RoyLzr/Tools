@@ -124,7 +124,7 @@ readn_to_ms(int fd, void *ptr, size_t nbytes, int msecs)
         return nread;
     if(nread == 0)
         return 0;
-    if((nread<0) && (errno!=EAGAIN) && (errno!=EINTR))
+    if((nread < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK) &&(errno != EINTR))
         return -1;
     if (nread < 0) 
     {
@@ -197,6 +197,7 @@ readn_to_ms(int fd, void *ptr, size_t nbytes, int msecs)
         else 
         {
             nread += ret;
+            msecs -= timeuse;
         }
       //没写完，继续
     } while (ret > 0 && nbytes != (size_t)nread);
@@ -345,38 +346,8 @@ sendn(int fd, void *usrbuf, size_t n)
 }
 
 
-int 
-set_fd(int fd, int flags, int closed)
-{
-    int val;
-    if ( (val = fcntl(fd, F_GETFL, 0)) < 0)
-    {
-        if(closed == 0)
-        {
-            close(fd);
-        }
-        return -1;
-    }
-    val |= flags;
-    if ( (fcntl(fd, F_SETFL, val)) < 0)
-    {
-        if(closed == 0)
-            close(fd);
-        return -1;
-    }
-    return 0;
-}
-
-int 
-set_fd_noblock(int fd)
-{
-   return set_fd(fd, O_NONBLOCK, 1);
-}
-
-
-/*
 ssize_t 
-writen_to_ms(int sock, const void *ptr, size_t nbytes, int msecs)
+sendn_to_ms(int fd, const void *ptr, size_t nbytes, int msecs)
 {
     struct timeval tv;
     struct timeval old_tv;
@@ -386,68 +357,270 @@ writen_to_ms(int sock, const void *ptr, size_t nbytes, int msecs)
     int timeuse = 0;
     socklen_t oplen = sizeof(tv);
 
-    nwrite = send(sock, ptr, nbytes, MSG_DONTWAIT);
-    UL_RETURN_VAL_IF((nwrite==(ssize_t)nbytes), nwrite);
-    UL_RETURN_VAL_IF((nwrite<0)&&(errno!=EAGAIN)&&(errno!=EWOULDBLOCK)&&(errno!=EINTR), -1);
-    if (nwrite < 0) {
+    nwrite = send(fd, ptr, nbytes, MSG_DONTWAIT);
+
+    if (nwrite==(ssize_t)nbytes)
+        return nwrite;
+    if ((nwrite < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))
+        return -1;
+    if (nwrite == 0)
+        return 0;
+    if (nwrite < 0) 
+    {
         nwrite = 0;
     }
 
     //0的时候不希望会被堵塞住
-    if (0 == msecs) {
+    if (0 == msecs) 
+    {
         errno = ETIMEDOUT;
         return -1;
     }
     //负数的时候我们要堵塞
-    if (msecs < 0) {
+    if (msecs < 0) 
+    {
        msecs = INT_MAX; 
     }
 
-    UL_RETURN_VAL_IF(getsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &old_tv, &oplen)<0, -1);
-    UL_RETURN_VAL_IF((sockflag = fcntl(sock, F_GETFL, 0))<0, -1);
-    if (sockflag&O_NONBLOCK) {
-        UL_RETURN_VAL_IF(fcntl(sock, F_SETFL, (sockflag)&(~O_NONBLOCK))<0, -1);
+    if(getsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &old_tv, &oplen) < 0)
+        return -1;
+    if(sockflag = fcntl(fd, F_GETFL, 0) < 0) 
+        return -1;
+
+    if (sockflag & O_NONBLOCK) 
+    {
+        if(fcntl(fd, F_SETFL, (sockflag)&(~O_NONBLOCK)) < 0)
+            return -1;
     }
-    oplen = sizeof(tv);
+    
     struct timeval cur;
     struct timeval last;
-    do {
+    do 
+    {
         tv.tv_sec = msecs/1000;
         tv.tv_usec = (msecs%1000)*1000;
-        //set都已经失败了,对sock的其它操作已经没有多大意义了
         gettimeofday(&cur, NULL);
-        UL_RETURN_VAL_IF(setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, oplen)<0, -1); 
-        do { 
-            ret = send(sock, (char*)ptr + nwrite, nbytes-(size_t)nwrite, MSG_WAITALL); 
+        if(setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, oplen)<0)
+            return -1; 
+        do 
+        { 
+            ret = send(fd, (char*)ptr + nwrite, nbytes-(size_t)nwrite, MSG_WAITALL); 
         } while (ret < 0 && EINTR == errno);
 
-        if (ret > 0 && nwrite+ret < (ssize_t)nbytes) {
+        if (ret > 0 && nwrite + ret < (ssize_t)nbytes) 
+        {
             //判断是否真是超时
             gettimeofday(&last, NULL);
             timeuse = ((last.tv_usec - cur.tv_usec)/1000+(last.tv_sec - cur.tv_sec)*1000);
-            if (timeuse >= msecs) {
+            if (timeuse >= msecs) 
+            {
                 //真的超时了
                 errno = ETIMEDOUT;
                 ret = -1;
                 nwrite = -1;
-            } else {
+            } 
+            else 
+            {
                 //不是超时，一般是被中断了, 继续写
                 msecs -= timeuse;
                 nwrite += ret;
-
             }
-        } else if (ret < 0) {
+        } 
+        else if (ret < 0) 
+        {
             nwrite = -1;
-        } else {
+        } 
+        else 
+        {
             nwrite += ret;
         }
-        //没搞定继续写
     } while (ret > 0 && nbytes != (size_t)nwrite);
-    if (sockflag & O_NONBLOCK) {
-        UL_RETURN_VAL_IF(fcntl(sock, F_SETFL, sockflag)<0, -1);
-    }
-    UL_RETURN_VAL_IF(setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &old_tv, oplen)<0, -1);
+    
+    if (fcntl(fd, F_SETFL, sockflag) < 0)
+        return  -1;
+    if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &old_tv, oplen) < 0)
+        return -1;
     
     return nwrite;
 }
-*/
+
+int 
+set_fd(int fd, int flags, int closed)
+{
+    int val;
+    int sockflag;
+    if ( (val = fcntl(fd, F_GETFL, 0)) < 0)
+    {
+        if(closed == 0)
+        {
+            close(fd);
+        }
+        return -1;
+    }
+
+    sockflag = val;
+    val |= flags;
+
+    if ( (fcntl(fd, F_SETFL, val)) < 0)
+    {
+        if(closed == 0)
+            close(fd);
+        return -1;
+    }
+    return sockflag;
+}
+
+int 
+set_fd_noblock(int fd)
+{
+   return set_fd(fd, O_NONBLOCK, 1);
+}
+
+int
+net_accept(int sockfd, struct sockaddr *sa, socklen_t * addrlen)
+{
+    int connfd = 0;
+    do
+    {
+        connfd = accept(sockfd, sa, addrlen);
+	    if (connfd < 0) 
+        {
+	        if (errno == ECONNABORTED || errno == EINTR || errno == EWOULDBLOCK)
+                continue; 
+            else 
+			    return -1;
+	    }
+    } while(connfd < 0);
+	return connfd;
+}
+
+int
+net_tcplisten(int port, int queue)
+{
+	int listenfd;
+	const int on = 1;
+	struct sockaddr_in soin;
+
+	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    {
+		return -1;
+	}
+
+	if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+        return -1;
+
+	bzero(&soin, sizeof(soin));
+
+	soin.sin_family = AF_INET;
+	soin.sin_addr.s_addr = htonl(INADDR_ANY);
+	soin.sin_port = htons(port);
+
+	if (bind(listenfd, (struct sockaddr *) &soin, sizeof(soin)) < 0) 
+    {
+	    close(listenfd);
+		return -1;
+	}
+    
+    if(queue <= 0)
+        queue = 5;
+
+	if (listen(listenfd, queue) < 0) 
+    {
+		close(listenfd);
+		return -1;
+	}
+	return listenfd;
+}
+
+int
+net_connect_to_ms(int sockfd, const struct sockaddr *sa, 
+                  socklen_t socklen, int msecs, int isclose)
+{
+	if (msecs <= 0) 
+		return net_connect_to_tv(sockfd, sa, socklen, NULL, isclose);
+    else 
+    {
+		struct timeval tv;
+		tv.tv_sec = msecs / 1000;
+		tv.tv_usec = (msecs % 1000) * 1000;
+		return net_connect_to_tv(sockfd, sa, socklen, &tv, isclose);
+	}
+	return 0;
+}
+
+int
+net_connect_to_tv(int fd, const sockaddr * sa, 
+                socklen_t socklen, timeval * tv, int isclose)
+{
+	int sockflag;
+	int n, error;
+	socklen_t len;
+    fd_set rset, wset;
+
+    if(sa == NULL)
+    {    
+        close(fd);
+		return -1;
+	}
+
+	error = 0;
+    sockflag = set_fd_noblock(fd);
+
+	n = connect(fd, sa, (socklen_t) socklen);
+	if (n < 0) 
+    {
+		if (errno != EINPROGRESS) 
+        {
+            error = 1;
+            goto done;
+		}
+	}
+	if (n == 0) 
+		goto done;
+
+	FD_ZERO(&rset);
+    FD_SET(fd, &rset);
+    wset = rset;
+    if((n = select(fd + 1, &rset, &wset, NULL, tv)) ==0)
+    {
+        errno = ETIMEDOUT;
+        error = 1;
+        goto done;
+    }
+    if (FD_ISSET(fd, &rset) || FD_ISSET(fd, &wset))
+    {
+        len = sizeof(error);
+        if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
+        {
+            errno = error;
+            error = 1;
+            goto done;
+        }
+    }
+
+  done:
+	fcntl(fd, F_SETFL, sockflag);
+	if (error) 
+    {
+        if(isclose)
+		    close(fd);
+		return -1;
+	}
+	return 0;
+}
+
+int
+set_tcp_sockaddr(char * addr, int port, struct sockaddr_in * soin)
+{
+    soin->sin_family = AF_INET;
+    soin->sin_port = htons(port);
+    return inet_pton(AF_INET, addr, &(soin->sin_addr));
+}
+
+const char *
+get_tcp_sockaddr(char * addr, int * port, struct sockaddr_in * soin, int len)
+{
+    *port = ntohs(soin->sin_port);
+    return inet_ntop(AF_INET, &(soin->sin_addr), addr, len);
+}
+

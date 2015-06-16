@@ -65,6 +65,32 @@ set_fd(int fd, int flags, int closed);
 int 
 set_fd_noblock(int fd);
 
+int
+set_tcp_sockaddr(char * addr, int port, 
+                 struct sockaddr_in * soin);
+
+const char *
+get_tcp_sockaddr(char * addr, int * port, 
+                 struct sockaddr_in * soin, int len);
+
+int
+net_connect_to_tv(int fd, const sockaddr * sa, 
+                socklen_t socklen, timeval * tv, int isclose = 1);
+
+
+int
+net_connect_to_ms(int sockfd, const struct sockaddr *sa, 
+                  socklen_t socklen, int msecs, int isclose = 1);
+
+
+int
+net_accept(int sockfd, struct sockaddr *sa, socklen_t * addrlen);
+
+
+int
+net_tcplisten(int port, int queue);
+
+
 ssize_t 
 readn_to_ms(int fd, void *ptr, size_t nbytes, int msecs);
 
@@ -77,5 +103,7 @@ ssize_t
 rio_readline_to_ms(rio_t *rp, void *usrbuf, size_t maxlen, int msecs);
 
 
+ssize_t 
+sendn_to_ms(int sock, const void *ptr, size_t nbytes, int msecs);
 
 #endif
